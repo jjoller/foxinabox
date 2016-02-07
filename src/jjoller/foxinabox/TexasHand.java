@@ -33,7 +33,7 @@ public abstract class TexasHand {
 		this.players = players;
 		this.activePlayers = new LinkedList<>();
 		activePlayers.addAll(players);
-		this.actions = new ArrayList<Integer>(this.players.size() * 8);
+		this.actions = new ArrayList<>(this.players.size() * 8);
 		flop = Optional.empty();
 		turn = river = Optional.empty();
 		paid = new int[players.size()];
@@ -76,7 +76,7 @@ public abstract class TexasHand {
 	public TexasHand playHand() {
 
 		// deal cards
-		players.forEach(player -> dealer.dealCards(player));
+		players.forEach(dealer::dealCards);
 
 		// play blinds
 		performPlayerAction(players.get(0), dealer.smallBlind());
@@ -146,7 +146,7 @@ public abstract class TexasHand {
 		FiveCardValue bestVal = null;
 
 		if (this.activePlayers.size() > 1) {
-			winners = new HashSet<Player>();
+			winners = new HashSet<>();
 			for (Player player : this.activePlayers) {
 				EnumSet<Card> cards = player.holdings().get();
 				if (flop.isPresent()) {
@@ -189,7 +189,7 @@ public abstract class TexasHand {
 	/**
 	 * All the player except 1 folded or showdown
 	 * 
-	 * @return
+	 * @return true if the hand is
 	 */
 	public boolean isComplete() {
 
@@ -205,8 +205,7 @@ public abstract class TexasHand {
 	 * Return the player which is on turn. Return empty if there is no player on
 	 * turn, which means there is either a dealer action or the hand is
 	 * complete.
-	 * 
-	 * @return
+	 *
 	 */
 	private void moveToNextPlayer() {
 
@@ -233,10 +232,6 @@ public abstract class TexasHand {
 		assert players.contains(player) : "Player not on table";
 
 		return players.indexOf(player);
-	}
-
-	public boolean isAllIn(Player player) {
-		return paid(player) >= player.getStack();
 	}
 
 	public int paid(Player player) {
@@ -290,14 +285,12 @@ public abstract class TexasHand {
 		// write table cards
 		if (flop.isPresent()) {
 			Iterator<Card> iter = flop.get().iterator();
-			while (iter.hasNext()) {
+			while (iter.hasNext())
 				s += iter.next();
-			}
 			if (this.getTurn().isPresent()) {
 				s += this.getTurn().get();
-				if (this.getRiver().isPresent()) {
+				if (this.getRiver().isPresent())
 					s += this.getRiver().get();
-				}
 			}
 		}
 
@@ -479,7 +472,7 @@ interface Party {
 enum Phase {
 	PREFLOP(-2), FLOP(-3), TURN(-4), RIVER(-5);
 
-	private Phase(int action) {
+	Phase(int action) {
 		this.action = action;
 	}
 
@@ -488,5 +481,4 @@ enum Phase {
 	public int getAction() {
 		return action;
 	}
-
 }

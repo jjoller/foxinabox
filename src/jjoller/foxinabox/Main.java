@@ -11,7 +11,7 @@ public class Main {
 		PlayerModel model = Main::playRandomActionWeighted;
 
 		int stack = 1000000;
-		List<Player> players = new ArrayList<Player>();
+		List<Player> players = new ArrayList<>();
 		players.add(new Player("John", model, stack));
 		players.add(new Player("Ringo", model, stack));
 		players.add(new Player("George", model, stack));
