@@ -1,7 +1,6 @@
 package jjoller.foxinabox;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -10,7 +9,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Optional;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 /**
@@ -37,7 +35,7 @@ public abstract class TexasHand {
 		flop = Optional.empty();
 		turn = river = Optional.empty();
 		paid = new int[players.size()];
-		phase = Phase.PREFLOP;
+		phase = Phase.PRE_FLOP;
 		toPay = 0;
 		toPayPreviousPhase = 0;
 		minPlayerActions = this.players.size();
@@ -321,156 +319,64 @@ public abstract class TexasHand {
 
 	public abstract int raiseAmount();
 
-}
+	public static class Player {
 
-class Player {
+		public Player(String name, PlayerModel model, int stack) {
+			assert name.length() > 0;
+			assert model != null;
+			assert stack > 1 : "Player must have some stack";
 
-	public Player(String name, PlayerModel model, int stack) {
-		assert name.length() > 0;
-		assert model != null;
-		assert stack > 1 : "Player must have some stack";
-
-		this.name = name;
-		this.model = model;
-		this.stack = stack;
-		cards = Optional.empty();
-	}
-
-	private final String name;
-	private final PlayerModel model;
-	private Optional<EnumSet<Card>> cards;
-	private int stack;
-
-	void setStack(int newStack) {
-		this.stack = newStack;
-	}
-
-	protected void dealCards(Dealer dealer) {
-		dealer.dealCards(this);
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public PlayerModel getModel() {
-		return this.model;
-	}
-
-	public int getStack() {
-		return stack;
-	}
-
-	public Optional<EnumSet<Card>> holdings() {
-		if (this.cards.isPresent())
-			return Optional.of(this.cards.get().clone());
-		else
-			return this.cards;
-	}
-
-	void setCards(EnumSet<Card> cards) {
-		assert cards.size() == 2;
-		this.cards = Optional.of(cards);
-	}
-
-}
-
-class Dealer {
-
-	public Dealer() {
-		deck = new ArrayList<Card>(Card.values().length);
-		deck.addAll(Arrays.asList(Card.values()));
-		removed = new ArrayList<Card>(25);
-		random = new Random();
-	}
-
-	private final List<Card> deck;
-	private final List<Card> removed;
-	private final Random random;
-
-	public void reset() {
-		deck.addAll(removed);
-		removed.clear();
-	}
-
-	public void dealTableCards(TexasHand hand, Phase phase) {
-
-		switch (phase) {
-		case FLOP:
-			EnumSet<Card> flop = EnumSet.of(removeRandomFromDeck(),
-					removeRandomFromDeck(), removeRandomFromDeck());
-			hand.setFlop(flop);
-			break;
-		case TURN:
-			hand.setTurn(removeRandomFromDeck());
-			break;
-		case RIVER:
-			hand.setRiver(removeRandomFromDeck());
-			break;
-		default:
-			throw new IllegalStateException();
+			this.name = name;
+			this.model = model;
+			this.stack = stack;
+			cards = Optional.empty();
 		}
-	}
 
-	public void dealCards(Player player) {
+		private final String name;
+		private final PlayerModel model;
+		private Optional<EnumSet<Card>> cards;
+		private int stack;
 
-		player.setCards(EnumSet.of(removeRandomFromDeck(),
-				removeRandomFromDeck()));
-	}
-
-	private Card removeRandomFromDeck() {
-		Card card = deck.remove(random.nextInt(deck.size()));
-		removed.add(card);
-		return card;
-	}
-
-	public int smallBlind() {
-		return 1;
-	}
-
-	public int bigBlind() {
-		return 2;
-	}
-}
-
-interface PlayerModel {
-	int action(TexasHand hand);
-}
-
-class Action {
-
-	public static final int FOLD = -1;
-	public static final int DEAL_PREFLOP = -2;
-	public static final int DEAL_FLOP = -3;
-	public static final int DEAL_TURN = -4;
-	public static final int DEAL_RIVER = -5;
-
-	public static String toString(int action) {
-
-		switch (action) {
-		case FOLD:
-			return "f";
-		case DEAL_PREFLOP:
-			return "";
-		case DEAL_FLOP:
-			return "F";
-		case DEAL_TURN:
-			return "T";
-		case DEAL_RIVER:
-			return "R";
-		default:
-			Integer i = new Integer(action);
-			return i.toString();
+		void setStack(int newStack) {
+			this.stack = newStack;
 		}
-	}
-}
 
-interface Party {
-	public boolean isDealer();
+		protected void dealCards(Dealer dealer) {
+			dealer.dealCards(this);
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public PlayerModel getModel() {
+			return this.model;
+		}
+
+		public int getStack() {
+			return stack;
+		}
+
+		public Optional<EnumSet<Card>> holdings() {
+			if (this.cards.isPresent())
+				return Optional.of(this.cards.get().clone());
+			else
+				return this.cards;
+		}
+
+		void setCards(EnumSet<Card> cards) {
+			assert cards.size() == 2;
+			this.cards = Optional.of(cards);
+		}
+
+	}
+
+
 }
 
 enum Phase {
-	PREFLOP(-2), FLOP(-3), TURN(-4), RIVER(-5);
+
+	PRE_FLOP(-2), FLOP(-3), TURN(-4), RIVER(-5);
 
 	Phase(int action) {
 		this.action = action;

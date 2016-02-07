@@ -105,8 +105,7 @@ public class FiveCardValue implements Comparable<FiveCardValue> {
 	public HandValueType getHandValue() {
 		Card[] c = new Card[5];
 		c = fiveCard.toArray(c);
-		HandValueType type = getHandValueType(c[0], c[1], c[2], c[3], c[4]);
-		return type;
+		return getHandValueType(c[0], c[1], c[2], c[3], c[4]);
 	}
 
 	private static HandValueType getHandValueType(Card c0, Card c1, Card c2,
@@ -481,6 +480,7 @@ public class FiveCardValue implements Comparable<FiveCardValue> {
 		}
 
 		private boolean isThreeOfAKind(int p, int o, int k, int e, int r) {
+
 			boolean result = false;
 			for (int i = 0; i < 13; i++) {
 				int count = 0;

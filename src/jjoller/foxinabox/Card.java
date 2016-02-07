@@ -124,8 +124,10 @@ public enum Card {
 	 * of the suit.
 	 * 
 	 * @param valueOrdinal
+	 * 		The ordinal of the card value
 	 * @param suitOrdinal
-	 * @return
+	 * 		The ordinal of the card suit
+	 * @return value ordinal
 	 */
 	public static int ordinalByOrdinals(int valueOrdinal, int suitOrdinal) {
 		return valueOrdinal * 4 + suitOrdinal;
@@ -156,6 +158,7 @@ public enum Card {
 	 * Qh, Jc, Td, 9c and so on.
 	 * 
 	 * @param s
+	 * 		String to be parsed
 	 * @return the card represented by the string
 	 */
 	public static Card getFromString(String s) {
@@ -312,11 +315,11 @@ public enum Card {
 	}
 		
 	enum CardValue {
-		ACE, KING, QUEEN, JACK, TEN, NINE, EIGHT, SEVEN, SIX, FIVE, FOUR, THREE, TWO;
+		ACE, KING, QUEEN, JACK, TEN, NINE, EIGHT, SEVEN, SIX, FIVE, FOUR, THREE, TWO
 	}
 
 	enum CardSuit {
-		SPADES, HEARTS, CLUBS, DIAMONDS;
+		SPADES, HEARTS, CLUBS, DIAMONDS
 	}
 
 }
