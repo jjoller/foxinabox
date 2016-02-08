@@ -1,11 +1,15 @@
 package jjoller.foxinabox.playermodels.treesearch;
 
+        import java.util.EnumSet;
         import java.util.logging.Logger;
 
+        import jjoller.foxinabox.Card;
         import jjoller.foxinabox.Dealer;
         import jjoller.foxinabox.PlayerModel;
         import jjoller.foxinabox.TexasHand;
+        import jjoller.foxinabox.playermodels.treesearch.trees.MCRootNodeFactory;
         import jjoller.foxinabox.playermodels.treesearch.trees.MonteCarloTreeNode;
+        import jjoller.foxinabox.playermodels.treesearch.trees.UCTTexasNode;
 
 
 /**
@@ -19,12 +23,6 @@ public class TexasMonteCarloPlanner implements PlayerModel {
 
     /**
      *
-     * @param playerModelStatistics
-     *            Provides player models to model opponents.
-     *
-     * @param planningTime
-     *            The time in milliseconds the computer gets time to think about
-     *            the right move.
      *
      * @param minSampleRuns
      *            The minimum number of sample runs that have to be made
@@ -35,13 +33,12 @@ public class TexasMonteCarloPlanner implements PlayerModel {
      *
      */
     public TexasMonteCarloPlanner(PlayerModel opponentModel, int time,
-                                  int minSampleRuns, foxinabox.server.ai.treeSearch.trees.MCRootNodeFactory rootNodeFactory) {
+                                  int minSampleRuns, MCRootNodeFactory rootNodeFactory) {
 
         this.opponentModel = opponentModel;
         this.minSampleRuns = minSampleRuns;
         this.planningTime = time;
         this.rootNodeFactory = rootNodeFactory;
-        // this.lastUpdated = 0;
     }
 
     private MCRootNodeFactory rootNodeFactory = new MCRootNodeFactory() {
@@ -58,14 +55,6 @@ public class TexasMonteCarloPlanner implements PlayerModel {
     private int minSampleRuns = -1;
 
     // private long lastUpdated;
-
-    @Override
-    public PlayerModel clone() {
-        TexasMonteCarloPlanner copy = new TexasMonteCarloPlanner(
-                opponentModel.clone(), planningTime, minSampleRuns,
-                rootNodeFactory);
-        return copy;
-    }
 
     @Override
     public void update(TexasHand.Player hero) {
@@ -86,18 +75,7 @@ public class TexasMonteCarloPlanner implements PlayerModel {
         log.info("GET ACTION for player " + player.getName());
 
 
-        assert (player.getHoldings().size() == 2);
-
-        // modelStatistics.setHero(player);
-
-        // for (Hand previous : player.getHand().getHistory()) {
-        // if (previous.getTimestamp() > lastUpdated) {
-        // modelStatistics.update(previous);
-        // lastUpdated = previous.getTimestamp();
-        // }
-        // }
-
-        Hand hand = player.getHand();
+        assert (player.holdings().get().size() == 2);
 
         double maxWin = hand.maxPotsize();
         double numPlayers = hand.numPlayers();
@@ -108,19 +86,8 @@ public class TexasMonteCarloPlanner implements PlayerModel {
         hand = hand.clone();
         player = hand.getPlayerByName(player.getName());
 
-        Dealer dealer = new PlayerModelDealer(opponentModel, new RandomDealer());
+        Dealer dealer = new PlayerModelDealer(opponentModel, new Dealer());
 
-        EnumSet<Card> holeCards = player.getHoldings();
-
-        // don't look into the cards of the opponents.
-        hand.collectHoleCards();
-
-        // set own cards just for pretty printing
-        player.setHoldings(holeCards);
-
-        // rootNode = MonteCarloTreeNode.reuseTree(rootNode, currentHand, hand);
-        // if (rootNode == null) {
-        // log.info("do not reuse tree");
         rootNode = rootNodeFactory.rootNode(maxWin, maxLoose);
 
         MonteCarloJob job = new MonteCarloJob(rootNode, dealer, opponentModel, hand,
@@ -142,7 +109,7 @@ public class TexasMonteCarloPlanner implements PlayerModel {
         log.info("====== best action: " + bestAction + ", samples: "
                 + sampleCount + " ======");
 
-        return ImmutableMap.of(bestAction,1.0);
+        return bestAction;
     }
 
     public int getSampleCount() {
@@ -160,6 +127,7 @@ class MonteCarloJob implements Runnable {
     public MonteCarloJob(MonteCarloTreeNode rootNode, Dealer dealer,
                          PlayerModel modelStatistics, TexasHand hand, int planningTime,
                          int minSampleRuns, String heroName) {
+
         this.rootNode = rootNode;
         this.dealer = dealer;
         this.hand = hand;
@@ -172,7 +140,7 @@ class MonteCarloJob implements Runnable {
         this.minSampleRuns = Math.max(minSampleRuns, 2);
     }
 
-    private Hand hand;
+    private TexasHand hand;
     private MonteCarloTreeNode rootNode;
     private int planningTime;
     private int minSampleRuns;
@@ -185,15 +153,18 @@ class MonteCarloJob implements Runnable {
     public void run() {
 
         long startTime = System.currentTimeMillis();
-        while (System.currentTimeMillis() - startTime < planningTime
-                || sampleCount < minSampleRuns) {
+        while (sampleCount < minSampleRuns || System.currentTimeMillis() - startTime < planningTime) {
 
-            Hand copy = hand.clone();
+            TexasHand copy = hand.clone();
 
-            Player playerCopy = copy.getPlayerByName(heroName);
-            copy.dealHoleCards(dealer);
+            // TODO set player models accordingly
 
-            rootNode.sample(dealer,playerCopy, modelStatistics, 0);
+            copy.playHand();
+
+            copy.
+
+            // TODO inform the planning player about the outcome
+
             sampleCount++;
 
         }

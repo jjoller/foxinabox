@@ -1,7 +1,6 @@
 package jjoller.foxinabox.playermodels.treesearch.trees;
 
 import jjoller.foxinabox.Dealer;
-import jjoller.foxinabox.PlayerModel;
 import jjoller.foxinabox.TexasHand;
 
 import java.util.HashMap;
@@ -21,12 +20,12 @@ public abstract class MonteCarloTreeNode {
 	protected int visits = 0;
 	protected double maxReward, minReward;
 	protected boolean isHeroNode;
-	private Map<Integer, MonteCarloTreeNode> children = new HashMap<Integer, MonteCarloTreeNode>();
+	private Map<Integer, MonteCarloTreeNode> children = new HashMap<>();
 	protected double explorationRatio = 1;
 
 	public abstract int getBestAction();
 
-	public abstract int sample(Dealer dealer, TexasHand.Player hero, PlayerModel modelProvider, int depth);
+	public abstract int sample(Dealer dealer, TexasHand hand, int depth);
 
 	protected abstract int actionSelect(TexasHand hand);
 

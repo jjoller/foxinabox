@@ -41,35 +41,61 @@ public abstract class TexasHand {
 		minPlayerActions = this.players.size();
 	}
 
+	/**
+	 * Copy constructor
+	 * @param o
+	 * 	to copy
+	 * @return
+	 *  a deep copy of this hand
+     */
+	protected TexasHand(TexasHand o){
+		this.dealer = o.dealer;
+		this.players = o.players;
+		this.actions = new ArrayList<>(this.players.size()*8);
+		this.actions.addAll(o.actions);
+		this.activePlayers = new LinkedList<>();
+		this.activePlayers.addAll(o.activePlayers);
+		this.flop = o.flop;
+		this.turn = o.turn;
+		this.river = o.river;
+		this.minPlayerActions = o.minPlayerActions;
+		this.onTurn = o.onTurn;
+		this.paid = new int[players.size()];
+		System.arraycopy(o.paid,0,this.paid,0,this.paid.length);
+		this.onTurnIterator = this.activePlayers.listIterator(o.onTurnIterator.nextIndex());
+	}
+
 	protected final Dealer dealer;
 	protected final List<Player> players;
 	protected final LinkedList<Player> activePlayers;
-	private final List<Integer> actions;
-	private Optional<EnumSet<Card>> flop;
-	private Optional<Card> turn;
-	private Optional<Card> river;
+	protected final List<Integer> actions;
+	protected Optional<EnumSet<Card>> flop;
+	protected Optional<Card> turn;
+	protected Optional<Card> river;
 
 	// amount each player paid
-	private final int[] paid;
+	protected final int[] paid;
 
 	// preflop, flop, turn or river
-	private Phase phase;
+	protected Phase phase;
 
 	// amount which a player has to pay to stay active
-	private int toPay;
+	protected int toPay;
 
 	// toPay at the end of the previous phase
-	private int toPayPreviousPhase;
+	protected int toPayPreviousPhase;
 
 	// Number of minimal required player actions which are required to complete
 	// the phase.
-	private int minPlayerActions;
+	protected int minPlayerActions;
 
 	// iterate over the active players
-	private ListIterator<Player> onTurnIterator;
+	protected ListIterator<Player> onTurnIterator;
 
 	// player currently on turn
-	private Optional<Player> onTurn;
+	protected Optional<Player> onTurn;
+
+	public abstract TexasHand clone();
 
 	public TexasHand playHand() {
 
@@ -319,6 +345,15 @@ public abstract class TexasHand {
 
 	public abstract int raiseAmount();
 
+	public String actionIdentifier() {
+
+		String s = "";
+		for(int a:this.actions)
+			s += a+"_";
+
+		return s;
+	}
+
 	public static class Player {
 
 		public Player(String name, PlayerModel model, int stack) {
@@ -333,7 +368,7 @@ public abstract class TexasHand {
 		}
 
 		private final String name;
-		private final PlayerModel model;
+		private PlayerModel model;
 		private Optional<EnumSet<Card>> cards;
 		private int stack;
 
@@ -352,6 +387,8 @@ public abstract class TexasHand {
 		public PlayerModel getModel() {
 			return this.model;
 		}
+
+		public void setModel(PlayerModel model){this.model = model; }
 
 		public int getStack() {
 			return stack;
