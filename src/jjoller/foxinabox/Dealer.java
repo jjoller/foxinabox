@@ -3,63 +3,23 @@ package jjoller.foxinabox;
 import java.util.*;
 
 /**
- * Is responsible for dealing the cards. This standard implementation deals random cards.
+ * Is responsible for dealing the cards.
  */
-public class Dealer {
+public interface Dealer {
 
-    public Dealer() {
-        deck = new ArrayList<>(Card.values().length);
-        deck.addAll(Arrays.asList(Card.values()));
-        removed = new ArrayList<>(25);
-        random = new Random();
-    }
+    void reset();
 
-    private final List<Card> deck;
-    private final List<Card> removed;
-    private final Random random;
+    void dealTableCards(TexasHand hand);
 
-    public void reset() {
-        deck.addAll(removed);
-        removed.clear();
-    }
+    void dealHoleCards(TexasHand.Player player);
 
-    public void dealTableCards(TexasHand hand, Phase phase) {
-
-        switch (phase) {
-            case FLOP:
-                EnumSet<Card> flop = EnumSet.of(removeRandomFromDeck(),
-                        removeRandomFromDeck(), removeRandomFromDeck());
-                hand.setFlop(flop);
-                break;
-            case TURN:
-                hand.setTurn(removeRandomFromDeck());
-                break;
-            case RIVER:
-                hand.setRiver(removeRandomFromDeck());
-                break;
-            default:
-                throw new IllegalStateException();
-        }
-    }
-
-    public void dealCards(TexasHand.Player player) {
-
-        player.setCards(EnumSet.of(removeRandomFromDeck(),
-                removeRandomFromDeck()));
-    }
-
-    private Card removeRandomFromDeck() {
-        Card card = deck.remove(random.nextInt(deck.size()));
-        removed.add(card);
-        return card;
-    }
-
-    public int smallBlind() {
+    default int smallBlind() {
         return 1;
     }
 
-    public int bigBlind() {
+    default int bigBlind() {
         return 2;
     }
+
 }
 
