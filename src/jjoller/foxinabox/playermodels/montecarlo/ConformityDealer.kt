@@ -12,15 +12,20 @@ import jjoller.foxinabox.TexasHand
  */
 class ConformityDealer : Dealer {
 
-    constructor(hand: TexasHand) {
+    constructor(hero: TexasHand.Player, hand: TexasHand) {
+        heroName = hero.name
+        heroHoldings = hero.holdings().get()
         tableCards = hand.tableCards()
         deck = ArrayList<Card>()
         deck.addAll(Card.values())
+        deck.removeAll(heroHoldings)
         deck.removeAll(tableCards)
         removed = ArrayList<Card>()
         tableCardsIter = tableCards.iterator()
     }
 
+    private val heroName: String
+    private val heroHoldings: EnumSet<Card>
     private val tableCards: List<Card>
     private var tableCardsIter: Iterator<Card>
     private val deck: MutableList<Card>
@@ -46,9 +51,14 @@ class ConformityDealer : Dealer {
 
     override fun dealHoleCards(player: TexasHand.Player) {
 
+        if (player.name === heroName)
+            player.setCards(heroHoldings)
+        else
+
         // TODO select cards according to a Bandit model to choose cards which are more conform with the player model
 
-        player.setCards(EnumSet.of(removeRandomFromDeck(), removeRandomFromDeck()))
+            player.setCards(EnumSet.of(removeRandomFromDeck(), removeRandomFromDeck()))
+        //     println("set cards of " + player.name + " to " + player.holdings())
     }
 
     fun update(player: TexasHand.Player, conformity: Double) {

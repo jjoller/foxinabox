@@ -11,7 +11,7 @@ import java.util.Optional
  */
 abstract class TexasHand {
 
-    protected val dealer: Dealer
+    public val dealer: Dealer
     public val players: MutableList<Player>
     protected val activePlayers: LinkedList<Player>
     public val actions: MutableList<Int>
@@ -33,7 +33,7 @@ abstract class TexasHand {
     protected var minPlayerActions: Int = 0
 
     // iterate over the active players
-    protected var onTurnIterator: MutableListIterator<Player>
+    private var onTurnIterator: MutableListIterator<Player>
 
     // player currently on turn
     public var onTurn: Player? = null
@@ -118,9 +118,11 @@ abstract class TexasHand {
             onTurnIterator.remove()
         } else {
             paid[seat] += action
-            if (paid[seat] >= player.stack)
-            // is all-in
+            if (paid[seat] >= player.stack) {
+                // is all-in
                 onTurnIterator.remove()
+
+            }
         }
 
         toPay = Math.max(toPay, paid[seat])
@@ -154,7 +156,8 @@ abstract class TexasHand {
                 var bestVal: FiveCardValue? = null
 
                 for (p in this.activePlayers) {
-                    val cards = player.holdings().get()
+                    val cards = p.holdings().get()
+                    //   println(p.name+" holdings: " + cards)
                     this.addTableCards(cards)
                     val value = FiveCardValue(cards)
                     if (bestVal == null || value.isBetterThan(bestVal)) {
@@ -167,14 +170,17 @@ abstract class TexasHand {
                 }
             }
 
-            if (isWinner)
-                return this.pot() / winners - paid
-            else
-                return paid.toDouble()
+            if (isWinner) {
+                println(player.holdings().toString() + " is winner and wins " + (this.pot() / winners - paid) + " " + winners)
+                return this.pot() / winners - paid.toDouble()
+            } else {
+                println(player.holdings().toString() + " is loser and loses " + (-paid.toDouble()))
+                return -paid.toDouble()
+            }
 
         } else {
             // has folded
-            return (-paid).toDouble()
+            return -paid.toDouble()
         }
     }
 
@@ -342,10 +348,10 @@ abstract class TexasHand {
         return s
     }
 
-    class Player(val name: String, var model: PlayerModel, stack: Int) {
+    open class Player(val name: String, var model: PlayerModel, stack: Int) {
 
         var stack: Int
-        private var cards: Optional<EnumSet<Card>> = Optional.empty()
+        protected var cards: Optional<EnumSet<Card>> = Optional.empty()
 
         init {
             assert(name.length > 0)
@@ -354,14 +360,14 @@ abstract class TexasHand {
             cards = Optional.empty<EnumSet<Card>>()
         }
 
-        fun holdings(): Optional<EnumSet<Card>> {
+        public fun holdings(): Optional<EnumSet<Card>> {
             if (this.cards.isPresent)
                 return Optional.of(this.cards.get().clone())
             else
                 return this.cards
         }
 
-        fun setCards(cards: EnumSet<Card>) {
+        open fun setCards(cards: EnumSet<Card>) {
             assert(cards.size == 2)
             this.cards = Optional.of(cards)
         }

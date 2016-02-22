@@ -2,7 +2,14 @@ package jjoller.foxinabox
 
 import jjoller.foxinabox.playermodels.SimplePlayerModels
 import jjoller.foxinabox.playermodels.montecarlo.TexasMonteCarloPlanner
-import java.util.ArrayList
+import java.util.*
+
+class AAPlayer(name: String, model: PlayerModel, stack: Int) : TexasHand.Player(name, model, stack) {
+
+    override fun setCards(cards: EnumSet<Card>) {
+        this.cards = Optional.of(EnumSet.of(Card.ACE_C, Card.ACE_D))
+    }
+}
 
 fun main(args: Array<String>) {
 
@@ -26,16 +33,18 @@ fun main(args: Array<String>) {
 
     val t = System.currentTimeMillis()
     var count = 0
-    val duration: Long = 20000
+    val duration: Long = 10000
     while (System.currentTimeMillis() - t < duration) {
         count++
         val oldHand = hand
         hand = hand.payOutPot()
-        System.out.println(oldHand.toString())
+        println(oldHand.toString())
     }
 
     println("played " + count + " hands in "
             + (System.currentTimeMillis() - t) + " ms")
+
+
 }
 
 

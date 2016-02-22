@@ -1,13 +1,10 @@
 package jjoller.foxinabox.playermodels.montecarlo
 
+import jjoller.foxinabox.*
 import java.util.logging.Logger
 
 import java.util.ArrayList
 import java.util.HashMap
-
-import jjoller.foxinabox.LimitTexasHand
-import jjoller.foxinabox.PlayerModel
-import jjoller.foxinabox.TexasHand
 
 /**
  * Perform random samplings on a hand to approximate the optimal action.
@@ -18,21 +15,29 @@ class TexasMonteCarloPlanner(val opponentModel: PlayerModel, val planningTime: I
 
         val player = hand.onTurn!!
 
-        log.info("GET ACTION for player " + player.name)
+        //        log.info("GET ACTION for player " + player.name)
 
         val explorer = LimitBanditPlayer(ActionHistory(hand))
-        val job = MonteCarloJob(hand, explorer, player.name, opponentModel, planningTime, minSampleRuns)
+        val job = MonteCarloJob(player, hand, explorer, player.name, opponentModel, planningTime, minSampleRuns)
         job.run()
 
-        // get sample count
-        log.info(hand.toString() + "")
-        // log.info("explored: \n" + explorer + "");
+
+        //        log.info(hand.toString() + "")
+
         //log.info(opponentModel + "");
 
         val bestAction = explorer.bestAction(hand)
 
-        log.info("====== best action: " + bestAction + ", samples: "
-                + job.sampleCount + " ======")
+        if (hand.phase() == Phase.PRE_FLOP && hand.actions.size <= 5)
+            if (bestAction == Action.FOLD) {
+                println("FOLDS " + player.holdings().get() + " on pos " + hand.seat(player))
+                //                log.info("explored: \n" + explorer + "");
+            } else {
+                println("plays " + player.holdings().get() + " on pos " + hand.seat(player))
+                //                log.info("explored: \n" + explorer + "");
+            }
+        //        log.info("====== best action: " + bestAction + ", samples: "
+        //                + job.sampleCount + " ======")
 
         return bestAction
     }
@@ -47,7 +52,7 @@ class TexasMonteCarloPlanner(val opponentModel: PlayerModel, val planningTime: I
     }
 }
 
-internal class MonteCarloJob(private val hand: TexasHand, private val explorer: LimitBanditPlayer, private val heroName: String,
+internal class MonteCarloJob(private val hero: TexasHand.Player, private val hand: TexasHand, private val explorer: LimitBanditPlayer, private val heroName: String,
                              private val opponentModel: PlayerModel, private val planningTime: Int,
                              private val minSampleRuns: Int) : Runnable {
     var sampleCount = 0
@@ -56,7 +61,7 @@ internal class MonteCarloJob(private val hand: TexasHand, private val explorer: 
     override fun run() {
 
         // dealer used for experiments
-        val dealer = ConformityDealer(hand)
+        val dealer = ConformityDealer(hero, hand)
 
         // create the players used in the experiment
         val players = ArrayList<TexasHand.Player>()
