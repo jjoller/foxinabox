@@ -27,17 +27,8 @@ class TexasMonteCarloPlanner(val opponentModel: PlayerModel, val planningTime: I
         //log.info(opponentModel + "");
 
         val bestAction = explorer.bestAction(hand)
-
-        if (hand.phase() == Phase.PRE_FLOP && hand.actions.size <= 5)
-            if (bestAction == Action.FOLD) {
-                println("FOLDS " + player.holdings().get() + " on pos " + hand.seat(player))
-                //                log.info("explored: \n" + explorer + "");
-            } else {
-                println("plays " + player.holdings().get() + " on pos " + hand.seat(player))
-                //                log.info("explored: \n" + explorer + "");
-            }
-        //        log.info("====== best action: " + bestAction + ", samples: "
-        //                + job.sampleCount + " ======")
+        log.info(hand.toString());
+        log.info("====== best action: " + bestAction + ", samples: " + job.sampleCount + " ======")
 
         return bestAction
     }
@@ -86,6 +77,10 @@ internal class MonteCarloJob(private val hero: TexasHand.Player, private val han
             }
         }
 
+        // used to normalize the reward
+        val maxPay = dealer.bigBlind() * 24
+        val maxWin = maxPay * (hand.players.size - 1)
+
         // run the experiments
         val startTime = System.currentTimeMillis()
         while (sampleCount < minSampleRuns || System.currentTimeMillis() - startTime < planningTime) {
@@ -94,7 +89,7 @@ internal class MonteCarloJob(private val hero: TexasHand.Player, private val han
             val hand = LimitTexasHand(dealer, players)
 
             // inform the planner about the outcome (we're only interested in how much the hero won or lost)
-            explorer.update(hand.outcome(hero!!))
+            explorer.update((maxPay + hand.outcome(hero!!)) / maxWin)
 
             // inform the conformity dealer about the conformity of the cards
             for (e in opponentModels.entries)

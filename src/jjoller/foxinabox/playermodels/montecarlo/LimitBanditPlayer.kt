@@ -1,21 +1,27 @@
 package jjoller.foxinabox.playermodels.montecarlo
 
 import jjoller.foxinabox.Action
+import jjoller.foxinabox.Phase
 import jjoller.foxinabox.PlayerModel
 import jjoller.foxinabox.TexasHand
-
-import java.util.ArrayList
-import java.util.HashMap
+import java.util.*
 
 /**
  * Player who builds a monte carlo exploration tree
  */
-class LimitBanditPlayer(val actionHistory: ActionHistory, val explorationTradeOff: Int = 100) : PlayerModel {
+class LimitBanditPlayer(val actionHistory: ActionHistory, val explorationTradeOff: Int = 2) : PlayerModel {
 
     private val stats = HashMap<String, PlannerStatistics>()
     private val toUpdateHistories = ArrayList<String>()
+    private var foldExplored = false;
+    private var numPlayers = 3
+    private var bigBlind = 2;
+
 
     override fun action(hand: TexasHand): Int {
+
+        this.numPlayers = hand.players.size
+        this.bigBlind = hand.dealer.bigBlind()
 
         if (actionHistory.hasNext()) {
             // the player can not change the past, play according to the history
@@ -24,13 +30,11 @@ class LimitBanditPlayer(val actionHistory: ActionHistory, val explorationTradeOf
             // optimize the next action
 
             val history = hand.actionIdentifier()
-
-            var selectedAction = Integer.MAX_VALUE
-
-            val actions = possibleActions(hand)
-            var selectedHistory: String? = null
+            val actions = actionsToExplore(hand)
             var totalVisits = 0
             var minExp = Double.MAX_VALUE
+            var selectedAction = Integer.MAX_VALUE
+            var selectedHistory: String? = null
             for (a in actions) {
                 val childHistory = history + a + "_"
                 if (stats.containsKey(childHistory)) {
@@ -57,9 +61,7 @@ class LimitBanditPlayer(val actionHistory: ActionHistory, val explorationTradeOf
                         val childNode = stats[childHistory]
 
                         if (childNode == null) {
-                            // unexplored node
-                            toUpdateHistories.add(childHistory)
-                            return action
+                            throw IllegalStateException(childHistory)
                         } else {
                             // the node has been explored before
 
@@ -75,20 +77,23 @@ class LimitBanditPlayer(val actionHistory: ActionHistory, val explorationTradeOf
                     }
                 }
             }
+
             toUpdateHistories.add(selectedHistory!!)
+
+            if (selectedAction == Action.FOLD)
+                foldExplored = true
+
             return selectedAction
         }
     }
 
-    private fun possibleActions(hand: TexasHand): List<Int> {
+    private fun actionsToExplore(hand: TexasHand): MutableSet<Int> {
 
         val callAmount = hand.callAmount()
-        val raiseAmount = hand.raiseAmount()
-        val actions = ArrayList<Int>(3)
+        val actions = HashSet<Int>()
         actions.add(callAmount)
-        if (raiseAmount > callAmount)
-            actions.add(raiseAmount)
-        if (callAmount > 0)
+        actions.add(hand.raiseAmount())
+        if (!foldExplored && callAmount > 0)
             actions.add(Action.FOLD)
         return actions
     }
@@ -97,8 +102,10 @@ class LimitBanditPlayer(val actionHistory: ActionHistory, val explorationTradeOf
 
         val history = hand.actionIdentifier()
         var maxValue = java.lang.Double.NEGATIVE_INFINITY
-        val possibleActions = possibleActions(hand)
-        var bestAction = possibleActions[0]
+        val possibleActions = actionsToExplore(hand)
+        if (!possibleActions.contains(Action.CHECK))
+            possibleActions.add(Action.FOLD)
+        var bestAction = 0;
         for (action in possibleActions) {
             val childHistory = history + action + "_"
             val stats = this.stats[childHistory]
@@ -108,7 +115,7 @@ class LimitBanditPlayer(val actionHistory: ActionHistory, val explorationTradeOf
                 //                    // player looses money by folding even he is not on the blind
                 //                    expectation -= (hand.dealer.bigBlind() + hand.dealer.smallBlind()) / hand.players.size
                 //                }
-                if (hand.actions.size <= 5)
+                if (hand.phase() == Phase.PRE_FLOP && hand.actions.size <= 5)
                     println("exp of " + action + ": " + expectation + " n " + stats.visits())
                 if (maxValue < expectation) {
                     maxValue = expectation
@@ -118,7 +125,6 @@ class LimitBanditPlayer(val actionHistory: ActionHistory, val explorationTradeOf
                 throw IllegalStateException(childHistory)
             }
         }
-        //        println("BEST ACTION: $bestAction e: $maxValue")
         return bestAction
     }
 
@@ -128,7 +134,6 @@ class LimitBanditPlayer(val actionHistory: ActionHistory, val explorationTradeOf
      * @param outcome The value to modify the statistics with.
      */
     fun update(outcome: Double) {
-
         for (history in toUpdateHistories) {
             if (!stats.containsKey(history))
                 stats.put(history, PlannerStatistics())

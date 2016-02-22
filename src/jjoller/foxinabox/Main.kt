@@ -13,8 +13,8 @@ class AAPlayer(name: String, model: PlayerModel, stack: Int) : TexasHand.Player(
 
 fun main(args: Array<String>) {
 
-    val model = SimplePlayerModels.Aggressor()
-    val smart = TexasMonteCarloPlanner(model, 1, 1000)
+    val model = SimplePlayerModels.RandomizedPlayer()
+    val smart = TexasMonteCarloPlanner(SimplePlayerModels.RandomizedPlayer(), 1, 1000)
 
     val stack = 1000
     val players = ArrayList<TexasHand.Player>()
@@ -33,12 +33,12 @@ fun main(args: Array<String>) {
 
     val t = System.currentTimeMillis()
     var count = 0
-    val duration: Long = 10000
+    val duration: Long = 20000
     while (System.currentTimeMillis() - t < duration) {
         count++
         val oldHand = hand
         hand = hand.payOutPot()
-        println(oldHand.toString())
+//        println(oldHand.toString())
     }
 
     println("played " + count + " hands in "

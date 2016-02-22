@@ -171,10 +171,10 @@ abstract class TexasHand {
             }
 
             if (isWinner) {
-                println(player.holdings().toString() + " is winner and wins " + (this.pot() / winners - paid) + " " + winners)
+//                println(player.holdings().toString() + " is winner and wins " + (this.pot() / winners - paid) + " " + winners)
                 return this.pot() / winners - paid.toDouble()
             } else {
-                println(player.holdings().toString() + " is loser and loses " + (-paid.toDouble()))
+//                println(player.holdings().toString() + " is loser and loses " + (-paid.toDouble()))
                 return -paid.toDouble()
             }
 
